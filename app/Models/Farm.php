@@ -2,35 +2,40 @@
 
 namespace App\Models;
 
-use App\Factories\AnimalFactory;
+use App\Models\Animals\Animal;
 
 class Farm
 {
+    // В этом массиве ведется учет животных фермой
+    // тип животного (имя класса) => [
+    //      [ сгенерированный фермой id => объект Animal]
+    // ]
     private array $animals = [];
 
-    private AnimalFactory $animalFactory;
-
-    public function __construct(AnimalFactory $animalFactory)
+    public function addAnimal(Animal $animal): void
     {
-        $this->animalFactory = $animalFactory;
+        try {
+            // create key if was not exist
+            $this->animals[$animal::class] = $this->animals[$animal::class] ?? [];
+
+            $currentCount = count($this->animals[$animal::class]);
+            $animalId = $animal::class . '-' . ($currentCount + 1);
+            $this->animals[$animal::class][] = [
+                $animalId => $animal
+            ];
+        } catch (\InvalidArgumentException $e) {
+            // logging
+        }
     }
 
     /**
-     * Store some amount of specified type of animals
-     * @param string $animalType class name of an animal
-     * @param int $count
+     * Store some amount of one type of animals
+     * @param $animals array objects of Animal
      */
-    public function addAnimals(string $animalType, int $count = 1): void
+    public function addAnimals(array $animals): void
     {
-        // create key if was not exist
-        if (!isset($this->animals[$animalType])) {
-            $this->animals[$animalType] = [];
-        }
-
-        $currentCount = count($this->animals[$animalType]);
-        for ($i = 1; $i <= $count; $i++) {
-            $animalId = $animalType::getTypeName() . '-' . ($currentCount + 1);
-            $this->animals[$animalType][] = $this->animalFactory->create($animalType, $animalId);
+        foreach ($animals as $animal) {
+            $this->addAnimal($animal);
         }
     }
 
@@ -41,7 +46,8 @@ class Farm
     public function collectProducts(int $days = 1): void
     {
         foreach ($this->animals as $animalList) {
-            foreach ($animalList as $animal) {
+            foreach ($animalList as $animalArray) {
+                $animal = reset($animalArray);
                 for ($i = 0; $i < $days; $i++) {
                     $animal->collectProduct();
                 }
@@ -69,11 +75,10 @@ class Farm
     {
         $products = [];
         foreach ($this->animals as $animalList) {
-            foreach ($animalList as $animal) {
+            foreach ($animalList as $animalArray) {
+                $animal = reset($animalArray);
                 $productName = $animal->getProduct()->getName();
-                if (!isset($products[$productName])) {
-                    $products[$productName] = 0;
-                }
+                $products[$productName] = $products[$productName] ?? 0;
                 $products[$productName] += $animal->getProduct()->getCount();
             }
         }

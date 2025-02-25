@@ -8,17 +8,12 @@ use App\Models\Products\Product;
 
 abstract class Animal {
     protected string $id;
+    private Product $product;
 
-    protected Product $product;
-
-    /**
-     * @param string $id Unique animal ID
-     * @param Product $product Product associated with the animal
-     */
-    public function __construct(string $id, Product $product)
+    public function __construct()
     {
-        $this->id = $id;
-        $this->product = $product;
+        // Bind concrete product to an animal
+        $this->product = $this->bindProduct();
     }
 
     /**
@@ -41,10 +36,13 @@ abstract class Animal {
         return defined('static::TYPE_NAME') ? static::TYPE_NAME : 'Animal';
     }
 
+    abstract public function bindProduct(): Product;
+
+    /**
+     * @return Product
+     */
     public function getProduct(): Product
     {
         return $this->product;
     }
-
-
 }

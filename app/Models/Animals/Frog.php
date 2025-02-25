@@ -4,17 +4,17 @@
 namespace App\Models\Animals;
 
 
-use App\Models\Products\Milk;
+use App\Models\Products\Meat;
 use App\Models\Products\Product;
 
-class Cow extends Animal {
-    protected const TYPE_NAME = "Cow";
+class Frog extends Animal {
+    protected const TYPE_NAME = "Frog french";
     protected const MIN_PRODUCT = 8;
     protected const MAX_PRODUCT = 12;
 
     public function bindProduct(): Product
     {
-        return new Milk();
+        return new Meat();
     }
 }
 

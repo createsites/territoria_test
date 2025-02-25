@@ -4,22 +4,11 @@ namespace App\Models\Products;
 
 use InvalidArgumentException;
 
-class Product
+abstract class Product
 {
-    // Name of the product for displaying
-    private string $name;
-
     private int $count = 0;
 
-    public function __construct(string $name)
-    {
-        $this->name = $name;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
+    abstract public function getName(): string;
 
     /**
      * Store to count

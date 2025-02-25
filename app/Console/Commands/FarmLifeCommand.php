@@ -3,10 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Factories\AnimalFactory;
+use App\Models\Animals\Frog;
+use App\Models\Products\Product;
 use Illuminate\Console\Command;
 use App\Models\Farm;
 use App\Models\Animals\Cow;
 use App\Models\Animals\Chicken;
+use UnexpectedValueException;
 
 class FarmLifeCommand extends Command
 {
@@ -14,35 +17,49 @@ class FarmLifeCommand extends Command
 
     protected $description = 'Simulate life on the farm';
 
-    private Farm $farm;
-
     private const WEEK = 7;
     private const INITIAL_COWS = 10;
     private const INITIAL_CHICKENS = 20;
 
+    public function __construct(private Farm $farm, private AnimalFactory $animalFactory)
+    {
+        parent::__construct();
+    }
+
     public function handle()
     {
-        $this->farm = new Farm(new AnimalFactory());
+        try {
+            $cows = $this->animalFactory->createMany(Cow::class, self::INITIAL_COWS);
+            $this->farm->addAnimals($cows);
+            $chickens = $this->animalFactory->createMany(Chicken::class, self::INITIAL_CHICKENS);
+            $this->farm->addAnimals($chickens);
 
-        $this->farm->addAnimals(Cow::class, self::INITIAL_COWS);
-        $this->farm->addAnimals(Chicken::class, self::INITIAL_CHICKENS);
+            $this->info('Initial state of the farm:');
+            $this->displayAnimals();
 
-        $this->info('Initial state of the farm:');
-        $this->displayAnimals();
+            $this->farm->collectProducts(static::WEEK);
+            $this->info('A week has passed:');
+            $this->displayProducts();
 
-        $this->farm->collectProducts(static::WEEK);
-        $this->info('A week has passed:');
-        $this->displayProducts();
+            $cow = $this->animalFactory->createOne(Cow::class);
+            $this->farm->addAnimal($cow);
+            $chickens = $this->animalFactory->createMany(Chicken::class, 5);
+            $this->farm->addAnimals($chickens);
 
-        $this->farm->addAnimals(Cow::class, 1);
-        $this->farm->addAnimals(Chicken::class, 5);
+            $this->info('After market visit:');
+            $this->displayAnimals();
 
-        $this->info('After market visit:');
-        $this->displayAnimals();
+            $this->farm->collectProducts(static::WEEK);
+            $this->info('Another week has passed:');
+            $this->displayProducts();
 
-        $this->farm->collectProducts(static::WEEK);
-        $this->info('Another week has passed:');
-        $this->displayProducts();
+            $frog = $this->animalFactory->createOne(Frog::class);
+            $this->farm->addAnimal($frog);
+            $this->info('A frog was added:');
+            $this->displayAnimals();
+        } catch (UnexpectedValueException $e) {
+            $this->error($e->getMessage());
+        }
     }
 
     /**
